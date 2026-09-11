@@ -80,6 +80,16 @@ sliceTextIntoPieces = function(text, size) {
     return text.match(new RegExp('.{1,' + size + '}', 'g'));
 }
 
+sliceTextWordAware = function(text, size) {
+    let words = text.split(" ");
+    let workToDo = true;
+    let outWords = [];
+    while(workToDo) {
+        workToDo = false;
+    }
+    return words;
+}
+
 // Initialize box drawing
 let boxes = document.querySelectorAll(".box");
 
