@@ -84,10 +84,13 @@ sliceTextWordAware = function(text, size) {
     let words = text.split(" ");
     let workToDo = true;
     let outWords = [];
+    let outWordIndex = 0;
     while(workToDo) {
+        outWords[outWordIndex] = words[0];
+
         workToDo = false;
     }
-    return words;
+    return outWords;
 }
 
 // Initialize box drawing
