@@ -1,5 +1,5 @@
 // Functions
-drawBox = function(width, height, chars, textContent = "", backgroundChar = " ") {
+drawBox = function(width, height, chars, textContent = "", backgroundChar = " ", align = "center") {
     let out = "";
     symbols = {"upperLeft":chars[0], "upperRight":chars[1], "lowerLeft":chars[2], "lowerRight":chars[3], "horizontal":chars[4], "vertical":chars[5]}
     
@@ -34,7 +34,7 @@ drawBox = function(width, height, chars, textContent = "", backgroundChar = " ")
             if (h < spaceAboveContent || h >= spaceAboveContent + contentHeight) {
                 out += drawHorizontalLine(width, backgroundChar);
             } else { // else insert the content, center aligned
-                out += drawHorizontalLineWithText(width, backgroundChar, splitTextContent[h - spaceAboveContent])
+                out += drawHorizontalLineWithText(width, backgroundChar, splitTextContent[h - spaceAboveContent], align)
             }
             out += symbols.vertical;
             out += "\n"
@@ -57,20 +57,34 @@ drawHorizontalLine = function(width, char) {
     return out;
 }
 
-drawHorizontalLineWithText = function(width, char, text) {
+drawHorizontalLineWithText = function(width, char, text, align) {
     // how much space left when taking text into account
     let leftOverSpace = width - text.length;
     
-    // Left and right side spacing
-    let leftSideMargin = Math.floor(leftOverSpace/2);
-    let rightSideMargin = Math.ceil(leftOverSpace/2);
-    
     let out = "";
-    out += drawHorizontalLine(leftSideMargin, char);
+
+    if (align == "center") {
+        // Left and right side spacing
+        let leftSideMargin = Math.floor(leftOverSpace/2);
+        let rightSideMargin = Math.ceil(leftOverSpace/2);
     
-    out += text;
+        out += drawHorizontalLine(leftSideMargin, char);
     
-    out += drawHorizontalLine(rightSideMargin, char);
+        out += text;
+    
+        out += drawHorizontalLine(rightSideMargin, char);
+    } else {
+        if (align == "right") {
+            out += drawHorizontalLine(leftOverSpace, char);
+        }
+
+        out += text;
+        
+        if (align == "left") {
+            out += drawHorizontalLine(leftOverSpace, char);
+        }
+    }
+
     
     return out;
 }
@@ -93,6 +107,16 @@ sliceTextWordAware = function(text, size) {
     return outWords;
 }
 
+redrawBox = function(box) {
+    let width = box.getAttribute("width");
+    let height = box.getAttribute("height");
+    let chars = box.getAttribute("chars");
+    let text = box.originalText;
+    let backgroundChar = box.getAttribute("background");
+    let align = box.getAttribute("textAlign");
+    box.innerHTML = drawBox(width, height, chars, text, backgroundChar, align);
+}
+
 // Initialize box drawing
 let boxes = document.querySelectorAll(".box");
 
@@ -102,5 +126,20 @@ boxes.forEach((box, i) => {
     let chars = box.getAttribute("chars");
     let text = box.innerHTML;
     let backgroundChar = box.getAttribute("background");
-    box.innerHTML = drawBox(width, height, chars, text, backgroundChar);
+    let align = box.getAttribute("textAlign");
+    box.originalText = box.innerHTML;
+    box.innerHTML = drawBox(width, height, chars, text, backgroundChar, align);
 })
+
+document.querySelector(".chatinput").inputText = document.querySelector(".chatinput").originalText;
+
+document.querySelector("#inputField").addEventListener("input", function() {
+    let chatInputText = document.querySelector(".chatinput");
+    if (document.querySelector("#inputField").value !== "") {
+        chatInputText.originalText = "";
+        redrawBox(chatInputText);
+    } else {
+        chatInputText.originalText = chatInputText.inputText;
+        redrawBox(chatInputText);
+    }
+});

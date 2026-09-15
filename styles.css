@@ -55,6 +55,16 @@ h1 {
     color: var(--ctp-mocha-teal);
     white-space: pre-wrap;
 }
+#inputField {
+    position: fixed;
+    bottom: 3vh; left: 11vw;
+    z-index: 20;
+    width: 74vw;
+    height: 9vh;
+    background-color: rgba(0,0,0,0);
+    border: rgba(0,0,0,0);
+    color: var(--ctp-mocha-teal);
+}
 
 
 
