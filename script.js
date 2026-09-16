@@ -1,5 +1,5 @@
 // Functions
-drawBox = function(width, height, chars, textContent = "", backgroundChar = " ", align = "center") {
+generateBoxContents = function(width, height, chars, textContent = "", backgroundChar = " ", align = "center") {
     let out = "";
     symbols = {"upperLeft":chars[0], "upperRight":chars[1], "lowerLeft":chars[2], "lowerRight":chars[3], "horizontal":chars[4], "vertical":chars[5]}
     
@@ -107,39 +107,54 @@ sliceTextWordAware = function(text, size) {
     return outWords;
 }
 
-redrawBox = function(box) {
+drawBox = function(box) {
     let width = box.getAttribute("width");
     let height = box.getAttribute("height");
     let chars = box.getAttribute("chars");
-    let text = box.originalText;
+    let text = box.textContent;
     let backgroundChar = box.getAttribute("background");
     let align = box.getAttribute("textAlign");
-    box.innerHTML = drawBox(width, height, chars, text, backgroundChar, align);
+    box.innerHTML = generateBoxContents(width, height, chars, text, backgroundChar, align);
+}
+
+generateBoxObject = function(content, classes = "box", width = 10, height = 10, chars = "┌┐└┘─│", backgroundChar = " ", textAlign = "center") {
+    let newBox = document.createElement("div");
+    newBox.setAttribute("class", classes);
+    newBox.setAttribute("width", width);
+    newBox.setAttribute("height", height);
+    newBox.setAttribute("chars", chars);
+    newBox.setAttribute("background", backgroundChar);
+    newBox.setAttribute("textAlign", textAlign);
+    newBox.textContent = content;
+    newBox.innerHTML = content;
+    return newBox;
 }
 
 // Initialize box drawing
 let boxes = document.querySelectorAll(".box");
-
 boxes.forEach((box, i) => {
-    let width = box.getAttribute("width");
-    let height = box.getAttribute("height");
-    let chars = box.getAttribute("chars");
-    let text = box.innerHTML;
-    let backgroundChar = box.getAttribute("background");
-    let align = box.getAttribute("textAlign");
-    box.originalText = box.innerHTML;
-    box.innerHTML = drawBox(width, height, chars, text, backgroundChar, align);
+    box.textContent = box.innerHTML;
+    drawBox(box);
 })
 
+// Make the 'Type here...' box save it's content somewhere else
 document.querySelector(".chatinput").inputText = document.querySelector(".chatinput").originalText;
 
 document.querySelector("#inputField").addEventListener("input", function() {
     let chatInputText = document.querySelector(".chatinput");
     if (document.querySelector("#inputField").value !== "") {
         chatInputText.originalText = "";
-        redrawBox(chatInputText);
+        drawBox(chatInputText);
     } else {
         chatInputText.originalText = chatInputText.inputText;
-        redrawBox(chatInputText);
+        drawBox(chatInputText);
     }
 });
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === " ") {
+        let newBox = generateBoxObject("Test box");
+        drawBox(newBox);
+        document.querySelector("#centerBox").appendChild(newBox);
+    }
+})
