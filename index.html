@@ -8,7 +8,7 @@
 </head>
 <body id="body">
     <div id="container">
-        <h1 id="titleh1">ASCII Chat GUI</h1>
+        <h1 id="titleh1">ASCII Chat GUI - Currently viewing: <span id="selectedRoomDisplay">No room selected</span></h1>
         <h1 id="roomsh1">Rooms</h1>
         <h1 id="usersh1">Users</h1>
         <div id="chatlogBox" class="box" width="200" height="40" chars="┌┐└┘─│" background=" " textAlign="center"></div>
@@ -22,9 +22,9 @@
             <div id="sendLoginBox" class="blockItems box" width="40" height="auto" chars="┌┐└┘─│" background=" " textAlign="center" textId="submitButtonText">Login</div>
         </div>
         <div id="roomsBox" class="box" width="25" height="auto" chars="┌┐└┘─│" background=" " textAlign="center"></div>
+        <div id="roomsContainer"></div>
         <div id="usersBox" class="box" width="25" height="auto" chars="┌┐└┘─│" background=" " textAlign="center"></div>
-        <div id="roomContainer">
-            <div class="room" id="General"></div>
+        <div id="roomContentContainer">
         </div>
         <div id="chatinput" class="box inputBox" width="200" height="5" chars="┌┐└┘─│" background=" " textAlign="left" textId="inputFieldText"> Type here...</div>
         <input type="text" id="inputField" class="textInputField" boxIdToClear="chatinput">

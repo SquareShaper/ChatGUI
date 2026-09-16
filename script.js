@@ -157,7 +157,7 @@ generateBoxObject = function(params) {
     return newBox;
 }
 
-let room = "g";
+let currentRoomName = "General";
 let username = "";
 let password = "";
 
@@ -199,7 +199,7 @@ document.querySelector("#inputField").addEventListener("keydown", (event) => {
         let chatInputField = document.querySelector("#inputField");
         
         // check which room to send to
-        let roomDiv = document.querySelector("#"+room);
+        let roomDiv = document.querySelector("#"+currentRoomName);
 
         // if there's no room, stop execution
         if (roomDiv === null) {
@@ -228,7 +228,7 @@ document.querySelector("#inputField").addEventListener("keydown", (event) => {
 });
 
 // This is where we should connect to WarpTalk initially
-// let wt = new WarpTalk("wss", "warp.cs.au.dk/talk/");
+let wt = new WarpTalk("wss", "warp.cs.au.dk/talk/");
 
 let loginBox = document.querySelector("#sendLoginBox");
 loginBox.addEventListener("click", (event) => {
@@ -239,8 +239,16 @@ loginBox.addEventListener("click", (event) => {
 
     if (password === "") {
         console.log("guest login as: " + username);
-    } else {
+        wt.isLoggedIn(function(isLoggedIn){
+            if (isLoggedIn) {
+                wt.connect(sessionHandler);
+            } else {
+                wt.connect(sessionHandler, username);
+            }
+        });
+    } else { 
         console.log("sign in as: " + username);
+        // WIP
     }
 
     document.querySelector("#loginPrompt").classList.add("hidden");
@@ -248,24 +256,79 @@ loginBox.addEventListener("click", (event) => {
 
 });
 
+let currentRoom = "";
+let rooms = "";
 
-// WarpTalk Stuff
-// The following line configures WarpTalk to use a specific server
-// in this case the one running on warp.cs.au.dk
-// let wt = new WarpTalk("wss", "warp.cs.au.dk/talk/");
+// Called when WarpTalk connects
+function sessionHandler() {
+    console.log("Successfully established connection to WarpTalk!");
 
-// console.log("Connecting to the WarpTalk server ...");
+    rooms = wt.availableRooms;
+    rooms.forEach((r) => {
+        // make a room box (for listing the room on the side)
+        let newRoom = generateBoxObject({
+            content:r.name,
+            height:"auto",
+            textId:"room"+r.name,
+            width:"min100",
+            textAlign:"left",
+            classes:"roomBox box",
+            boxId:r.name+"Box"
+        });
+        // add and draw
+        document.querySelector("#roomsContainer").append(newRoom);
+        drawBox(newRoom);
 
-// // We will first check to see if we already are logged in with a registered nickname
-// // This will ask the server, so we have to wait for a response. We do this with a callback function.
-// wt.isLoggedIn(function(isLoggedIn) {
-//     if (isLoggedIn) { // If we are already logged in we can call connect that we also give a function to call when the connection has been established
-//         wt.connect(connected);
-//     } else { // If not, we prompt the user for a temporary unregistered nickname
-//        let nickname = prompt("What's your (unregistered) nickname?");
-//        wt.connect(connected, nickname);
-//     }
-// });
+        // make them clickable so you can switch
+        newRoom.addEventListener("click", (event) => {
+            let roomBoxName = event.target.getAttribute("id");
+            let roomName;
+            if (event.target.classList.contains("box")) {
+                roomName = roomBoxName.substring(0, roomBoxName.length - 3);
+            } else {
+                roomName = roomBoxName.substring(4);
+            }
+            joinRoom(roomName);
+        });
+
+        let roomContentContainer = document.querySelector("#roomContentContainer");
+        roomElement = document.createElement("div");
+        roomElement.classList.add("room");
+        roomElement.classList.add("hidden");
+        roomElement.setAttribute("id", r.name);
+        roomContentContainer.append(roomElement);
+    });
+
+    let roomsBox = document.querySelector("#roomsBox");
+    roomsBox.setAttribute("height", rooms.length * 3 + 1);
+    drawBox(roomsBox);
+
+    // doJoinGeneral(rooms);
+
+    
+}
+
+function joinRoom(room) {
+    console.log("Attempting to join: " + room);
+    currentRoom = wt.join(room);
+    currentRoomName = room;
+
+    document.querySelector("#selectedRoomDisplay").innerHTML = room;
+
+    let roomContainers = document.querySelectorAll(".room");
+    roomContainers.forEach(c => {
+        c.classList.add("hidden");
+    });
+
+    document.querySelector("#"+currentRoomName).classList.remove("hidden");
+
+    document.querySelector("#"+currentRoomName+"Box").classList.replace("roomBox", "selectedRoomBox");
+}
+
+function doJoinGeneral() {
+    // currently we just join General instantly... nonono bad
+    joinRoom(rooms[0].name);
+}
 
 // // This function is called when the connection to the server is established (we give it as argument to connect above).
 // function connected() {

@@ -60,6 +60,21 @@ h1 {
 #roomsBox {
     grid-area: centerLeft;
 }
+#roomsContainer {
+    grid-area: centerLeft;
+    display: flexbox;
+    margin-top: 10px;
+}
+.roomBox {
+    color: var(--ctp-mocha-pink);
+    margin-left: 15px;
+    cursor: pointer;
+}
+.selectedRoomBox {
+    color: var(--ctp-mocha-red);
+    margin-left: 25px;
+    cursor: pointer;
+}
 #usersBox {
     grid-area: centerRight;
 }
@@ -147,12 +162,9 @@ h1 {
 #otherMessages {
     color: var(--ctp-mocha-green);
 }
-#roomContainer {
-
-}
 .room {
     position: relative;
-    left: 11vw; top: 70px;
+    left: 30px; top: 30px;
     width: 73vw;
     height: 70vh;
     z-index: 2;
@@ -167,7 +179,9 @@ h1 {
 .hidden {
     display: none !important;
 }
-
+#roomContentContainer {
+    grid-area: center;
+}
 
 :root {
   --ctp-mocha-rosewater: #f5e0dc;
