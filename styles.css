@@ -4,6 +4,17 @@ html {
     font-family: monospace;
     background-color: var(--ctp-mocha-crust);
 }
+#container {
+    position: fixed;
+    top: 0; left: 0;
+    display: grid;
+    grid-template-areas:
+     "header header header"
+     "left center right"
+     "footer footer footer";
+    grid-template-columns: 10vw 80vw 10vw;
+    grid-template-rows: 10vw 70vw 10vw;
+}
 #reply {
     margin-left: auto;
 }
@@ -43,6 +54,8 @@ h1 {
     height: 70vh;
     z-index: 2;
     overflow: auto;
+    display: flex;
+    flex-direction: column-reverse;
 }
 .chatinput {
     position: fixed;
@@ -54,13 +67,23 @@ h1 {
 }
 #inputField {
     position: fixed;
-    bottom: 3vh; left: 11vw;
+    bottom: 3.4vh; left: 11vw;
     z-index: 20;
     width: 74vw;
     height: 9vh;
     background-color: rgba(0,0,0,0);
     border: rgba(0,0,0,0);
     color: var(--ctp-mocha-teal);
+}
+#inputFieldText {
+    color: var(--ctp-mocha-pink);
+    font-weight: bold;
+}
+#myMessages {
+    color: var(--ctp-mocha-green);
+}
+#otherMessages {
+    color: var(--ctp-mocha-peach);
 }
 
 

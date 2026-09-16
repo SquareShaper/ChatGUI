@@ -1,5 +1,5 @@
 // Functions
-generateBoxContents = function(width, height, chars, textContent = "", backgroundChar = " ", align = "center") {
+generateBoxContents = function(width, height = "auto", chars = "┌┐└┘─│", textContent = "", backgroundChar = " ", align = "center", textId = "defaultBoxContent") {
     let out = "";
     symbols = {"upperLeft":chars[0], "upperRight":chars[1], "lowerLeft":chars[2], "lowerRight":chars[3], "horizontal":chars[4], "vertical":chars[5]}
     
@@ -24,6 +24,10 @@ generateBoxContents = function(width, height, chars, textContent = "", backgroun
             throw new Error("Box too small for content!");
         }
 
+        if (height === "auto") {
+            height = contentHeight;
+        }
+
         // calculate space margins above content
         let spaceAboveContent = Math.ceil((height - contentHeight) / 2);
 
@@ -34,7 +38,9 @@ generateBoxContents = function(width, height, chars, textContent = "", backgroun
             if (h < spaceAboveContent || h >= spaceAboveContent + contentHeight) {
                 out += drawHorizontalLine(width, backgroundChar);
             } else { // else insert the content, center aligned
+                out += "<span id='" + textId + "'>";
                 out += drawHorizontalLineWithText(width, backgroundChar, splitTextContent[h - spaceAboveContent], align)
+                out += "</span>"
             }
             out += symbols.vertical;
             out += "\n"
@@ -94,6 +100,7 @@ sliceTextIntoPieces = function(text, size) {
     return text.match(new RegExp('.{1,' + size + '}', 'g'));
 }
 
+// WIP
 sliceTextWordAware = function(text, size) {
     let words = text.split(" ");
     let workToDo = true;
@@ -114,10 +121,21 @@ drawBox = function(box) {
     let text = box.textContent;
     let backgroundChar = box.getAttribute("background");
     let align = box.getAttribute("textAlign");
-    box.innerHTML = generateBoxContents(width, height, chars, text, backgroundChar, align);
+    let textId = box.getAttribute("textId");
+    box.innerHTML = generateBoxContents(width, height, chars, text, backgroundChar, align, textId);
 }
 
-generateBoxObject = function(content, classes = "box", width = 10, height = 10, chars = "┌┐└┘─│", backgroundChar = " ", textAlign = "center") {
+generateBoxObject = function(params) {
+    params = params || {};
+    content = params.content || "";
+    classes = params.classes || "box";
+    width = params.width || 10;
+    height = params.height || "auto";
+    chars = params.chars || "┌┐└┘─│";
+    backgroundChar = params.backgroundChar || " ";
+    textAlign = params.textAlign || "center";
+    textId = params.textId || "defaultBoxContent";
+    boxId = params.boxId || "";
     let newBox = document.createElement("div");
     newBox.setAttribute("class", classes);
     newBox.setAttribute("width", width);
@@ -125,36 +143,54 @@ generateBoxObject = function(content, classes = "box", width = 10, height = 10, 
     newBox.setAttribute("chars", chars);
     newBox.setAttribute("background", backgroundChar);
     newBox.setAttribute("textAlign", textAlign);
+    newBox.setAttribute("textId", textId);
+    newBox.setAttribute("id", boxId);
     newBox.textContent = content;
-    newBox.innerHTML = content;
     return newBox;
 }
 
 // Initialize box drawing
 let boxes = document.querySelectorAll(".box");
 boxes.forEach((box, i) => {
-    box.textContent = box.innerHTML;
     drawBox(box);
 })
 
 // Make the 'Type here...' box save it's content somewhere else
-document.querySelector(".chatinput").inputText = document.querySelector(".chatinput").originalText;
+document.querySelector(".chatinput").inputText = document.querySelector(".chatinput").textContent;
 
 document.querySelector("#inputField").addEventListener("input", function() {
     let chatInputText = document.querySelector(".chatinput");
     if (document.querySelector("#inputField").value !== "") {
-        chatInputText.originalText = "";
+        chatInputText.textContent = "";
         drawBox(chatInputText);
     } else {
-        chatInputText.originalText = chatInputText.inputText;
+        chatInputText.textContent = chatInputText.inputText;
         drawBox(chatInputText);
     }
 });
 
+let counter = 0;
+
+// spawn test boxes
 document.addEventListener("keydown", (event) => {
     if (event.key === " ") {
-        let newBox = generateBoxObject("Test box");
+        let newBox;
+        if (counter % 2 == 0) {
+            newBox = generateBoxObject({
+                content:"Test message " + Math.floor(counter/2),
+                height:"auto",
+                textId:"myMessages"
+            });
+        } else {
+            newBox = generateBoxObject({
+                content:"Test reply " + Math.floor(counter/2),
+                height:"auto",
+                textId:"otherMessages",
+                boxId:"reply"
+            });
+        }
+        counter++;
         drawBox(newBox);
-        document.querySelector("#centerBox").appendChild(newBox);
+        document.querySelector("#centerBox").prepend(newBox);
     }
 })
