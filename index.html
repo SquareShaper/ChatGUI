@@ -4,15 +4,15 @@
     <title>ASCIIChatGUI</title>
     <link rel="stylesheet" href="./styles.css">
     <script defer src="./script.js"></script>
+    <script src="./warptalk.js"></script>
 </head>
 <body id="body">
     <div id="container">
         <h1>ASCII Chat GUI</h1>
+        <div class="chatlog box" width="200" height="40" chars="┌┐└┘─│" background=" " textAlign="center"></div>
+        <div id="centerBox" room=""></div>
+        <div class="chatinput box" width="200" height="5" chars="┌┐└┘─│" background=" " textAlign="left" textId="inputFieldText"> Type here...</div>
+        <input type="text" id="inputField">
     </div>
-    <div class="chatlog box" width="200" height="40" chars="┌┐└┘─│" background=" " textAlign="center"></div>
-    <div id="centerBox" room="">
-    </div>
-    <div class="chatinput box" width="200" height="5" chars="┌┐└┘─│" background=" " textAlign="left" textId="inputFieldText"> Type here...</div>
-    <input type="text" id="inputField">
 </body>
 </html>

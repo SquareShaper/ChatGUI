@@ -1,7 +1,12 @@
 // Functions
-generateBoxContents = function(width, height = "auto", chars = "┌┐└┘─│", textContent = "", backgroundChar = " ", align = "center", textId = "defaultBoxContent") {
+generateBoxContents = function(width = "min10", height = "auto", chars = "┌┐└┘─│", boxTextContent = "", backgroundChar = " ", align = "center", textId = "defaultBoxContent") {
     let out = "";
     symbols = {"upperLeft":chars[0], "upperRight":chars[1], "lowerLeft":chars[2], "lowerRight":chars[3], "horizontal":chars[4], "vertical":chars[5]}
+    
+    // make the width auto adjust for width=minxxx, example min100 (100 chars long, or width of text, whichever is smaller)
+    if (width.substring(0,3) === "min") {
+        width = Math.min(Number(width.substring(3)), boxTextContent.length);
+    }
     
     // top line
     out += symbols.upperLeft;
@@ -10,7 +15,7 @@ generateBoxContents = function(width, height = "auto", chars = "┌┐└┘─�
     out += "\n";
     
     // empty box
-    if (textContent === "") {
+    if (boxTextContent === "") {
         for (h = 0; h < height; h++) {
             out += symbols.vertical;
             out += drawHorizontalLine(width, backgroundChar);
@@ -18,19 +23,22 @@ generateBoxContents = function(width, height = "auto", chars = "┌┐└┘─�
             out += "\n"
         }
     } else { // box with content
-        let splitTextContent = sliceTextIntoPieces(textContent, width);
+        let splitTextContent = sliceTextIntoPieces(boxTextContent, width);
         let contentHeight = splitTextContent.length;
-        if (contentHeight > height) {
-            throw new Error("Box too small for content!");
-        }
-
+        
+        // make auto boxes actually set height automatically
         if (height === "auto") {
             height = contentHeight;
         }
-
+        
+        
+        if (contentHeight > height) {
+            throw new Error("Box too small for content!");
+        }
+        
         // calculate space margins above content
         let spaceAboveContent = Math.ceil((height - contentHeight) / 2);
-
+        
         // loop to draw contents
         for (h = 0; h < height; h++) {
             out += symbols.vertical;
@@ -68,29 +76,29 @@ drawHorizontalLineWithText = function(width, char, text, align) {
     let leftOverSpace = width - text.length;
     
     let out = "";
-
+    
     if (align == "center") {
         // Left and right side spacing
         let leftSideMargin = Math.floor(leftOverSpace/2);
         let rightSideMargin = Math.ceil(leftOverSpace/2);
-    
+        
         out += drawHorizontalLine(leftSideMargin, char);
-    
+        
         out += text;
-    
+        
         out += drawHorizontalLine(rightSideMargin, char);
     } else {
         if (align == "right") {
             out += drawHorizontalLine(leftOverSpace, char);
         }
-
+        
         out += text;
         
         if (align == "left") {
             out += drawHorizontalLine(leftOverSpace, char);
         }
     }
-
+    
     
     return out;
 }
@@ -108,7 +116,7 @@ sliceTextWordAware = function(text, size) {
     let outWordIndex = 0;
     while(workToDo) {
         outWords[outWordIndex] = words[0];
-
+        
         workToDo = false;
     }
     return outWords;
@@ -118,7 +126,7 @@ drawBox = function(box) {
     let width = box.getAttribute("width");
     let height = box.getAttribute("height");
     let chars = box.getAttribute("chars");
-    let text = box.textContent;
+    let text = box.boxTextContent;
     let backgroundChar = box.getAttribute("background");
     let align = box.getAttribute("textAlign");
     let textId = box.getAttribute("textId");
@@ -145,52 +153,57 @@ generateBoxObject = function(params) {
     newBox.setAttribute("textAlign", textAlign);
     newBox.setAttribute("textId", textId);
     newBox.setAttribute("id", boxId);
-    newBox.textContent = content;
+    newBox.boxTextContent = content;
     return newBox;
 }
 
-// Initialize box drawing
+// Initially draw all boxes. 
 let boxes = document.querySelectorAll(".box");
 boxes.forEach((box, i) => {
+    if (box.boxTextContent === undefined) {
+        box.boxTextContent = box.textContent;
+    }
     drawBox(box);
 })
 
 // Make the 'Type here...' box save it's content somewhere else
-document.querySelector(".chatinput").inputText = document.querySelector(".chatinput").textContent;
+document.querySelector(".chatinput").inputText = document.querySelector(".chatinput").boxTextContent;
 
+
+// everytime the inputfield is changed, check whether it is empty to show the
+// Type here... behind it. 
 document.querySelector("#inputField").addEventListener("input", function() {
     let chatInputText = document.querySelector(".chatinput");
     if (document.querySelector("#inputField").value !== "") {
-        chatInputText.textContent = "";
+        chatInputText.boxTextContent = "";
         drawBox(chatInputText);
     } else {
-        chatInputText.textContent = chatInputText.inputText;
+        chatInputText.boxTextContent = chatInputText.inputText;
         drawBox(chatInputText);
     }
 });
 
-let counter = 0;
 
-// spawn test boxes
-document.addEventListener("keydown", (event) => {
-    if (event.key === " ") {
-        let newBox;
-        if (counter % 2 == 0) {
-            newBox = generateBoxObject({
-                content:"Test message " + Math.floor(counter/2),
-                height:"auto",
-                textId:"myMessages"
-            });
-        } else {
-            newBox = generateBoxObject({
-                content:"Test reply " + Math.floor(counter/2),
-                height:"auto",
-                textId:"otherMessages",
-                boxId:"reply"
-            });
-        }
-        counter++;
-        drawBox(newBox);
+document.querySelector("#inputField").addEventListener("keydown", (event) => {
+    // if we press enter while having the input field selected
+    if (event.key === "Enter") {
+        // grab the input field
+        let chatInputField = document.querySelector("#inputField");
+        // make the chatbox. 
+        let newBox = generateBoxObject({
+            content:chatInputField.value,
+            height:"auto",
+            textId:"myMessages",
+            width:"min100",
+            textAlign:"left"
+        });
+        
         document.querySelector("#centerBox").prepend(newBox);
+        drawBox(newBox);
+        
+        chatInputField.value = "";
+        let chatInputText = document.querySelector(".chatinput");
+        chatInputText.boxTextContent = chatInputText.inputText;
+        drawBox(chatInputText);
     }
 })

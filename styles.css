@@ -73,17 +73,18 @@ h1 {
     height: 9vh;
     background-color: rgba(0,0,0,0);
     border: rgba(0,0,0,0);
-    color: var(--ctp-mocha-teal);
+    color: var(--ctp-mocha-pink);
+    font-weight: bold;
 }
 #inputFieldText {
     color: var(--ctp-mocha-pink);
     font-weight: bold;
 }
 #myMessages {
-    color: var(--ctp-mocha-green);
+    color: var(--ctp-mocha-pink);
 }
 #otherMessages {
-    color: var(--ctp-mocha-peach);
+    color: var(--ctp-mocha-green);
 }
 
 
