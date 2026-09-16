@@ -8,11 +8,26 @@
 </head>
 <body id="body">
     <div id="container">
-        <h1>ASCII Chat GUI</h1>
-        <div class="chatlog box" width="200" height="40" chars="┌┐└┘─│" background=" " textAlign="center"></div>
-        <div id="centerBox" room=""></div>
-        <div class="chatinput box" width="200" height="5" chars="┌┐└┘─│" background=" " textAlign="left" textId="inputFieldText"> Type here...</div>
-        <input type="text" id="inputField">
+        <h1 id="titleh1">ASCII Chat GUI</h1>
+        <h1 id="roomsh1">Rooms</h1>
+        <h1 id="usersh1">Users</h1>
+        <div id="chatlogBox" class="box" width="200" height="40" chars="┌┐└┘─│" background=" " textAlign="center"></div>
+        <div id="loginBackgroundBox" class="blockItems box" width="80" height="25" chars="┌┐└┘─│" background=" " textAlign="center"></div>
+        <div id="loginPrompt">
+            <div id="loginBox" class="blockItems box" width="40" height="4" chars="┌┐└┘─│" background=" " textAlign="center">Connect to WarpTalk by logging in using the fields below. </div>
+            <div id="usernameBox" class="blockItems box inputBox" width="40" height="auto" chars="┌┐└┘─│" background=" " textAlign="center" textId="inputFieldText">Enter username here...</div>
+            <input type="text" id="userInputField" class="blockItems textInputField" boxIdToClear="usernameBox">
+            <div id="passwordBox" class="blockItems box inputBox" width="40" height="auto" chars="┌┐└┘─│" background=" " textAlign="center" textId="inputFieldText">Leave password blank for guest login.</div>
+            <input type="text" id="passwordInputField" class="blockItems textInputField" boxIdToClear="passwordBox">
+            <div id="sendLoginBox" class="blockItems box" width="40" height="auto" chars="┌┐└┘─│" background=" " textAlign="center" textId="submitButtonText">Login</div>
+        </div>
+        <div id="roomsBox" class="box" width="25" height="auto" chars="┌┐└┘─│" background=" " textAlign="center"></div>
+        <div id="usersBox" class="box" width="25" height="auto" chars="┌┐└┘─│" background=" " textAlign="center"></div>
+        <div id="roomContainer">
+            <div class="room" id="General"></div>
+        </div>
+        <div id="chatinput" class="box inputBox" width="200" height="5" chars="┌┐└┘─│" background=" " textAlign="left" textId="inputFieldText"> Type here...</div>
+        <input type="text" id="inputField" class="textInputField" boxIdToClear="chatinput">
     </div>
 </body>
 </html>

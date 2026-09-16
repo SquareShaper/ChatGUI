@@ -157,6 +157,10 @@ generateBoxObject = function(params) {
     return newBox;
 }
 
+let room = "g";
+let username = "";
+let password = "";
+
 // Initially draw all boxes. 
 let boxes = document.querySelectorAll(".box");
 boxes.forEach((box, i) => {
@@ -164,23 +168,26 @@ boxes.forEach((box, i) => {
         box.boxTextContent = box.textContent;
     }
     drawBox(box);
-})
+});
 
-// Make the 'Type here...' box save it's content somewhere else
-document.querySelector(".chatinput").inputText = document.querySelector(".chatinput").boxTextContent;
+// Make all input boxes save their content somewhere else
+let inputBoxes = document.querySelectorAll(".inputBox");
+inputBoxes.forEach((box, i) => {
+    box.inputText = box.boxTextContent;
+});
 
-
-// everytime the inputfield is changed, check whether it is empty to show the
-// Type here... behind it. 
-document.querySelector("#inputField").addEventListener("input", function() {
-    let chatInputText = document.querySelector(".chatinput");
-    if (document.querySelector("#inputField").value !== "") {
-        chatInputText.boxTextContent = "";
-        drawBox(chatInputText);
-    } else {
-        chatInputText.boxTextContent = chatInputText.inputText;
-        drawBox(chatInputText);
-    }
+// Make all input fields clear and re-set their background default text
+let inputFields = document.querySelectorAll(".textInputField");
+inputFields.forEach((field, i) => {
+    field.addEventListener("input", (event) => {
+        let textBox = document.querySelector("#"+event.target.getAttribute("boxIdToClear"))
+        if (event.target.value !== "") {
+            textBox.boxTextContent = " ";
+        } else {
+            textBox.boxTextContent = textBox.inputText;
+        }
+        drawBox(textBox);
+    })
 });
 
 
@@ -189,6 +196,15 @@ document.querySelector("#inputField").addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
         // grab the input field
         let chatInputField = document.querySelector("#inputField");
+        
+        // check which room to send to
+        let roomDiv = document.querySelector("#"+room);
+
+        // if there's no room, stop execution
+        if (roomDiv === null) {
+            return;
+        }
+
         // make the chatbox. 
         let newBox = generateBoxObject({
             content:chatInputField.value,
@@ -198,12 +214,104 @@ document.querySelector("#inputField").addEventListener("keydown", (event) => {
             textAlign:"left"
         });
         
-        document.querySelector("#centerBox").prepend(newBox);
+        // add the new text
+        roomDiv.prepend(newBox);
         drawBox(newBox);
         
+        // and clear the input field
         chatInputField.value = "";
-        let chatInputText = document.querySelector(".chatinput");
+        let chatInputText = document.querySelector("#chatinput");
         chatInputText.boxTextContent = chatInputText.inputText;
         drawBox(chatInputText);
     }
-})
+});
+
+// This is where we should connect to WarpTalk initially
+// let wt = new WarpTalk("wss", "warp.cs.au.dk/talk/");
+
+let loginBox = document.querySelector("#sendLoginBox");
+loginBox.addEventListener("click", (event) => {
+    console.log("Logging in...");
+
+    username = document.querySelector("#userInputField").value;
+    password = document.querySelector("passwordInputField").value;
+
+    if (password === "") {
+
+    } else {
+
+    }
+
+    document.querySelector("#loginPrompt").classList.add("hidden");
+    document.querySelector("#loginBackgroundBox").classList.add("hidden");
+
+});
+
+
+// WarpTalk Stuff
+// The following line configures WarpTalk to use a specific server
+// in this case the one running on warp.cs.au.dk
+// let wt = new WarpTalk("wss", "warp.cs.au.dk/talk/");
+
+// console.log("Connecting to the WarpTalk server ...");
+
+// // We will first check to see if we already are logged in with a registered nickname
+// // This will ask the server, so we have to wait for a response. We do this with a callback function.
+// wt.isLoggedIn(function(isLoggedIn) {
+//     if (isLoggedIn) { // If we are already logged in we can call connect that we also give a function to call when the connection has been established
+//         wt.connect(connected);
+//     } else { // If not, we prompt the user for a temporary unregistered nickname
+//        let nickname = prompt("What's your (unregistered) nickname?");
+//        wt.connect(connected, nickname);
+//     }
+// });
+
+// // This function is called when the connection to the server is established (we give it as argument to connect above).
+// function connected() {
+//     console.log("Connection established.");
+//     // We can now list the rooms available on the server
+//     console.log("The server has the following rooms:");
+//     wt.availableRooms.forEach(r => {
+//         console.log(`- ${r.name}: ${r.description}`);
+//     });
+
+//     // Let's join a room. We'll take the first one in the list. That's 'General'.
+//     let room = wt.join(wt.availableRooms[0].name);
+
+//     // We can now use the room object to send a message to that room.
+//     room.send("Hello, room!");
+
+//     // We can subscribe to messages.
+//     // Note that the callback function has two parameters: the room and the message.
+//     room.onMessage((room, msg) => {
+//         console.log(`${room.name} - ${msg.sender}: ${msg.message}`);
+//     });
+
+//     // We can also subscribe to notifications of clients joining the room
+//     room.onJoin((room, nickname) => {
+//        console.log(`${nickname} joined ${room.name}`);
+//     });
+
+//     // ... and leaving the room
+//     room.onLeave((room, nickname) => {
+//         console.log(`${nickname} left ${room.name}`);
+//     });
+
+//     // Also to get a notification if the connection to the server is lost
+//     // The client will automatically try to reconnect
+//     room.onDisconnect((room) => {
+//        console.log(`Connection to server lost`);
+//     });
+
+//     // These two lines puts the functions on the global window object so
+//     // so they can be called from the JavaScript console
+//     window.send = function(msg) {
+//         room.send(msg);
+//     };
+//     window.login = function(username, password) {
+//         wt.login(username, password);
+//     }
+//     window.logout = function() {
+//         wt.logout();
+//     }
+// };
