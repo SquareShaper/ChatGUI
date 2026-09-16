@@ -179,6 +179,7 @@ inputBoxes.forEach((box, i) => {
 // Make all input fields clear and re-set their background default text
 let inputFields = document.querySelectorAll(".textInputField");
 inputFields.forEach((field, i) => {
+    field.value = "";
     field.addEventListener("input", (event) => {
         let textBox = document.querySelector("#"+event.target.getAttribute("boxIdToClear"))
         if (event.target.value !== "") {
@@ -234,12 +235,12 @@ loginBox.addEventListener("click", (event) => {
     console.log("Logging in...");
 
     username = document.querySelector("#userInputField").value;
-    password = document.querySelector("passwordInputField").value;
+    password = document.querySelector("#passwordInputField").value;
 
     if (password === "") {
-
+        console.log("guest login as: " + username);
     } else {
-
+        console.log("sign in as: " + username);
     }
 
     document.querySelector("#loginPrompt").classList.add("hidden");
