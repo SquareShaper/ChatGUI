@@ -75,6 +75,11 @@ h1 {
     margin-left: 25px;
     cursor: pointer;
 }
+.activeRoomBox {
+    color: var(--ctp-mocha-rosewater) !important;
+    margin-left: 35px !important;
+    cursor: default !important;
+}
 #usersBox {
     grid-area: centerRight;
 }

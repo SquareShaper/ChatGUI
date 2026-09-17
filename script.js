@@ -227,38 +227,35 @@ loginBox.addEventListener("click", (event) => {
     username = document.querySelector("#userInputField").value;
     password = document.querySelector("#passwordInputField").value;
     
-    if (password === "") {
-        console.log("guest login as: " + username);
-        wt.isLoggedIn(function(isLoggedIn){
-            if (isLoggedIn) {
-                wt.connect(sessionHandler);
-            } else {
+    
+    wt.isLoggedIn(function(isLoggedIn){
+        if (isLoggedIn) {
+            wt.connect(sessionHandler);
+            wt._getRegisteredNickname(nick => {
+                username = nick.nickname;
+            });
+        } else {
+            if (password === "") {
+                console.log("guest login as: " + username);
                 wt.connect(sessionHandler, username);
-            }
-        });
-    } else { 
-        console.log("sign in as: " + username);
-        wt.isLoggedIn(function(isLoggedIn){
-            if (isLoggedIn) {
-                wt.connect(sessionHandler);
             } else {
                 wt.connect(sessionHandler, username+"12988912749813fillertomakesurethisain'tregistered");
                 wt.login(username, password);
             }
-        });
-    }
+        }
+        setTimeout(function() {
+            // update username thingy in the header
+            document.querySelector("#usernameDisplay").innerHTML = username;
+            if (isLoggedIn) {
+                document.querySelector("#userType").innerHTML = "(registered)";
+            } else {
+                document.querySelector("#userType").innerHTML = "(guest)";
+            }
+        }, 1000);
+    });
     
     document.querySelector("#loginPrompt").classList.add("hidden");
     document.querySelector("#loginBackgroundBox").classList.add("hidden");
-    
-    // update username thingy in the header
-    document.querySelector("#usernameDisplay").innerHTML = username;
-    if (password === "") {
-        document.querySelector("#userType").innerHTML = "(guest)";
-    } else {
-        document.querySelector("#userType").innerHTML = "(registered)";
-    }
-    
 });
 
 let currentRoom = "";
@@ -320,11 +317,12 @@ function sessionHandler() {
     drawBox(roomsBox);
     
     // This shi- don't work :(
-    // setInterval(function(){
-    //     if (currentRoom != "") {
-    //         updateUsersBox(currentRoom);
-    //     }
-    // }, 1000);
+    // Update: it might work now
+    setInterval(function(){
+        if (currentRoom != "") {
+            updateUsersBox(currentRoom);
+        }
+    }, 1000);
 }
 
 function appendUserBox(usersList, name, roomName) {
@@ -458,6 +456,11 @@ function joinRoom(room) {
     
     // highlight the joined room
     document.querySelector("#"+currentRoomName+"Box").classList.replace("roomBox", "selectedRoomBox");
+    // highlight the room we're in, removing highlight from the others
+    for (roomObject of rooms) {
+        document.querySelector("#"+roomObject.name+"Box").classList.remove("activeRoomBox");
+    }
+    document.querySelector("#"+currentRoomName+"Box").classList.add("activeRoomBox");
     
     // grab the users already in the room and add them to the userslist
     // very hacky...
@@ -467,24 +470,11 @@ function joinRoom(room) {
 function updateUsersBox(room) {
     let usersList = document.querySelector("#users"+room.name);
     let usersInRoom = room.clients;
-    for (child of usersList.children) {
-        child.remove();
-    }
+    // omg clearing this didn't work properly before...
+    usersList.innerHTML = "";
     
-    
-    let sortedUsers = [];
     for (userInRoom of usersInRoom) {
-        sortedUsers.push(userInRoom.nickname);
-    }
-    
-    sortedUsers.sort();
-    
-    console.log(sortedUsers);
-    for (i = 0; i < sortedUsers.length; i++) {
-        let usernameInRoom = sortedUsers[i];
-        if (!userExists(room, usernameInRoom)) {
-            appendUserBox(usersList, usernameInRoom, room.name);
-        }
+        appendUserBox(usersList, userInRoom.nickname, room.name);
     }
     adjustUsersBox();
 }
