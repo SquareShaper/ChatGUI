@@ -15,8 +15,8 @@ html {
     grid-template-columns: 11vw auto auto;
     grid-template-rows: 4vw auto 10vw;
 }
-#reply {
-    margin-left: auto;
+.reply {
+    margin-left: auto !important;
 }
 h1 {
     position: static;
@@ -77,6 +77,18 @@ h1 {
 }
 #usersBox {
     grid-area: centerRight;
+}
+#usersContainer {
+    grid-area: centerRight;
+    display: flexbox;
+    margin-top: 10px;
+}
+.usersBox {
+    color: var(--ctp-mocha-pink);
+    margin-left: 15px;
+}
+#users {
+    color: var(--ctp-mocha-pink);
 }
 #loginPrompt {
     grid-area: center;

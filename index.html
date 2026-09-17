@@ -8,7 +8,7 @@
 </head>
 <body id="body">
     <div id="container">
-        <h1 id="titleh1">ASCII Chat GUI - Currently viewing: <span id="selectedRoomDisplay">No room selected</span></h1>
+        <h1 id="titleh1">ASCII Chat GUI - Logged in as: <span id="usernameDisplay">not logged in</span><span id="userType"></span> - Currently viewing: <span id="selectedRoomDisplay">No room selected</span></h1>
         <h1 id="roomsh1">Rooms</h1>
         <h1 id="usersh1">Users</h1>
         <div id="chatlogBox" class="box" width="200" height="40" chars="┌┐└┘─│" background=" " textAlign="center"></div>
@@ -24,9 +24,9 @@
         <div id="roomsBox" class="box" width="25" height="auto" chars="┌┐└┘─│" background=" " textAlign="center"></div>
         <div id="roomsContainer"></div>
         <div id="usersBox" class="box" width="25" height="auto" chars="┌┐└┘─│" background=" " textAlign="center"></div>
-        <div id="roomContentContainer">
-        </div>
-        <div id="chatinput" class="box inputBox" width="200" height="5" chars="┌┐└┘─│" background=" " textAlign="left" textId="inputFieldText"> Type here...</div>
+        <div id="roomContentContainer"></div>
+        <div id="usersContainer"></div>
+        <div id="chatinput" class="box inputBox" width="200" height="5" chars="┌┐└┘─│" background=" " textAlign="left" textId="inputFieldText">Connect to a room to send messages...</div>
         <input type="text" id="inputField" class="textInputField" boxIdToClear="chatinput">
     </div>
 </body>

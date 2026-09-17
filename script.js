@@ -31,9 +31,13 @@ generateBoxContents = function(width = "min10", height = "auto", chars = "┌┐
             height = contentHeight;
         }
         
-        
+        let clipText = false;
         if (contentHeight > height) {
-            throw new Error("Box too small for content!");
+            // no longer error on height diff, just force it down
+            // should work just like this?
+            clipText = true;
+            console.log("clipping!");
+            contentHeight = height;
         }
         
         // calculate space margins above content
@@ -47,7 +51,11 @@ generateBoxContents = function(width = "min10", height = "auto", chars = "┌┐
                 out += drawHorizontalLine(width, backgroundChar);
             } else { // else insert the content, center aligned
                 out += "<span id='" + textId + "'>";
-                out += drawHorizontalLineWithText(width, backgroundChar, splitTextContent[h - spaceAboveContent], align)
+                if (clipText && h == spaceAboveContent + contentHeight - 1) {
+                    out += drawHorizontalLineWithText(width, backgroundChar, splitTextContent[h - spaceAboveContent].substring(0,splitTextContent[h-spaceAboveContent].length-3)+"...", align)
+                } else {
+                    out += drawHorizontalLineWithText(width, backgroundChar, splitTextContent[h - spaceAboveContent], align)
+                }
                 out += "</span>"
             }
             out += symbols.vertical;
@@ -171,7 +179,7 @@ boxes.forEach((box, i) => {
 });
 
 // Make all input boxes save their content somewhere else
-let inputBoxes = document.querySelectorAll(".inputBox");
+    let inputBoxes = document.querySelectorAll(".inputBox");
 inputBoxes.forEach((box, i) => {
     box.inputText = box.boxTextContent;
 });
@@ -191,33 +199,15 @@ inputFields.forEach((field, i) => {
     })
 });
 
-
+// Sending texts
 document.querySelector("#inputField").addEventListener("keydown", (event) => {
     // if we press enter while having the input field selected
     if (event.key === "Enter") {
         // grab the input field
         let chatInputField = document.querySelector("#inputField");
         
-        // check which room to send to
-        let roomDiv = document.querySelector("#"+currentRoomName);
-
-        // if there's no room, stop execution
-        if (roomDiv === null) {
-            return;
-        }
-
-        // make the chatbox. 
-        let newBox = generateBoxObject({
-            content:chatInputField.value,
-            height:"auto",
-            textId:"myMessages",
-            width:"min100",
-            textAlign:"left"
-        });
+        currentRoom.send(chatInputField.value);
         
-        // add the new text
-        roomDiv.prepend(newBox);
-        drawBox(newBox);
         
         // and clear the input field
         chatInputField.value = "";
@@ -233,10 +223,10 @@ let wt = new WarpTalk("wss", "warp.cs.au.dk/talk/");
 let loginBox = document.querySelector("#sendLoginBox");
 loginBox.addEventListener("click", (event) => {
     console.log("Logging in...");
-
+    
     username = document.querySelector("#userInputField").value;
     password = document.querySelector("#passwordInputField").value;
-
+    
     if (password === "") {
         console.log("guest login as: " + username);
         wt.isLoggedIn(function(isLoggedIn){
@@ -248,21 +238,38 @@ loginBox.addEventListener("click", (event) => {
         });
     } else { 
         console.log("sign in as: " + username);
-        // WIP
+        wt.isLoggedIn(function(isLoggedIn){
+            if (isLoggedIn) {
+                wt.connect(sessionHandler);
+            } else {
+                wt.connect(sessionHandler, username+"12988912749813fillertomakesurethisain'tregistered");
+                wt.login(username, password);
+            }
+        });
     }
-
+    
     document.querySelector("#loginPrompt").classList.add("hidden");
     document.querySelector("#loginBackgroundBox").classList.add("hidden");
-
+    
+    // update username thingy in the header
+    document.querySelector("#usernameDisplay").innerHTML = username;
+    if (password === "") {
+        document.querySelector("#userType").innerHTML = "(guest)";
+    } else {
+        document.querySelector("#userType").innerHTML = "(registered)";
+    }
+    
 });
 
 let currentRoom = "";
 let rooms = "";
 
+let listeningOn = {};
+
 // Called when WarpTalk connects
 function sessionHandler() {
     console.log("Successfully established connection to WarpTalk!");
-
+    
     rooms = wt.availableRooms;
     rooms.forEach((r) => {
         // make a room box (for listing the room on the side)
@@ -278,7 +285,7 @@ function sessionHandler() {
         // add and draw
         document.querySelector("#roomsContainer").append(newRoom);
         drawBox(newRoom);
-
+        
         // make them clickable so you can switch
         newRoom.addEventListener("click", (event) => {
             let roomBoxName = event.target.getAttribute("id");
@@ -290,44 +297,196 @@ function sessionHandler() {
             }
             joinRoom(roomName);
         });
-
+        
         let roomContentContainer = document.querySelector("#roomContentContainer");
-        roomElement = document.createElement("div");
+        let roomElement = document.createElement("div");
         roomElement.classList.add("room");
         roomElement.classList.add("hidden");
         roomElement.setAttribute("id", r.name);
         roomContentContainer.append(roomElement);
+        
+        let usersContainer = document.querySelector("#usersContainer");
+        let usersElement = document.createElement("div");
+        usersElement.classList.add("users");
+        usersElement.classList.add("hidden");
+        usersElement.setAttribute("id", "users"+r.name);
+        usersContainer.append(usersElement);
+        
+        listeningOn[r.name] = false;
     });
-
+    
     let roomsBox = document.querySelector("#roomsBox");
     roomsBox.setAttribute("height", rooms.length * 3 + 1);
     drawBox(roomsBox);
-
-    // doJoinGeneral(rooms);
-
     
+    // This shi- don't work :(
+    // setInterval(function(){
+    //     if (currentRoom != "") {
+    //         updateUsersBox(currentRoom);
+    //     }
+    // }, 1000);
+}
+
+function appendUserBox(usersList, name, roomName) {
+    let userBox = generateBoxObject({
+        content:name,
+        height:"1",
+        textId:"users",
+        width:"min22",
+        textAlign:"left",
+        classes:"usersBox box",
+        boxId:name+roomName+"Box"
+    });
+    usersList.append(userBox);
+    drawBox(userBox);
+    
+    // resize users background box
+    adjustUsersBox();
+}
+
+// check if a user already exists
+function userExists(room, name) {
+    let usersList = document.querySelector("#users"+room.name);
+    
+    for (child of usersList.children) {
+        if (child.boxTextContent === name) {
+            return true; // user exists already, so don't add another box
+        }
+    }
+    
+    return false;
+}
+
+function adjustUsersBox() {
+    // resize users background box
+    let usersBox = document.querySelector("#usersBox");
+    let currentUsersList = document.querySelector("#users"+currentRoomName);
+    usersBox.setAttribute("height", currentUsersList.children.length * 3);
+    drawBox(usersBox);
+}
+
+let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function messageSent(room, msg) {
+    // msg shape:
+    // message: "kjljkl"
+    // room: "General"
+    // sender: "fisk"
+    // type: "message"
+    
+    
+    
+    // check which room to send to
+    let roomDiv = document.querySelector("#"+room.name);
+    
+    // if there's no room, stop execution
+    if (roomDiv === null) {
+        console.log("Received a message, but for some reason the div for: "+ room.name + " doesn't exist...");;
+        return;
+    }
+    
+    // get the current time to use for timestamping
+    let date = new Date;
+    let timestamp = date.getDate() + "/" + months[date.getMonth()] + "/" + date.getFullYear().toString().substring(2);
+    let messageTextId = "otherMessages";
+    let messageTextAlign = "right";
+    let boxClasses = "reply box"
+    
+    // take care of which user sent it
+    if (msg.sender === username) {
+        messageTextId = "myMessages";
+        messageTextAlign = "left";
+        boxClasses = "box"
+    }
+    
+    // make the chatbox. 
+    let newBox = generateBoxObject({
+        content:"["+msg.sender+"|"+timestamp+"] "+msg.message,
+        height:"auto",
+        textId:messageTextId,
+        width:"min100",
+        textAlign:messageTextAlign,
+        classes:boxClasses
+    });
+    
+    // add the new text
+    roomDiv.prepend(newBox);
+    drawBox(newBox);
 }
 
 function joinRoom(room) {
     console.log("Attempting to join: " + room);
     currentRoom = wt.join(room);
     currentRoomName = room;
-
+    
+    // Make the text input field show that you can send messages now
+    let inputTextBox = document.querySelector("#chatinput");
+    let inputTextBoxContent = " Start typing to send a message in " + room + "...";
+    inputTextBox.boxTextContent = inputTextBoxContent;
+    inputTextBox.inputText = inputTextBoxContent;
+    drawBox(inputTextBox);
+    
+    // make the heading show current room
     document.querySelector("#selectedRoomDisplay").innerHTML = room;
-
-    let roomContainers = document.querySelectorAll(".room");
-    roomContainers.forEach(c => {
+    
+    // update username thingy in the header
+    document.querySelector("#usernameDisplay").innerHTML = username;
+    
+    // hide the user and message pane for the other rooms
+    let containers = document.querySelectorAll(".room, .users");
+    containers.forEach(c => {
         c.classList.add("hidden");
     });
-
+    
+    // show the current room messages and users
     document.querySelector("#"+currentRoomName).classList.remove("hidden");
-
+    document.querySelector("#users"+currentRoomName).classList.remove("hidden");
+    
+    // add listeners, if they didn't exist yet
+    if (!listeningOn[currentRoomName]) {
+        currentRoom.onJoin((room, name) => {
+            setTimeout(updateUsersBox(room), 200);
+        });
+        currentRoom.onLeave((room, name) => {
+            setTimeout(updateUsersBox(room), 200);
+        })
+        currentRoom.onMessage((room, msg) => {
+            messageSent(room, msg);
+        });
+        listeningOn[currentRoomName] = true;
+    }
+    
+    // highlight the joined room
     document.querySelector("#"+currentRoomName+"Box").classList.replace("roomBox", "selectedRoomBox");
+    
+    // grab the users already in the room and add them to the userslist
+    // very hacky...
+    setTimeout(updateUsersBox(currentRoom), 1500);
 }
 
-function doJoinGeneral() {
-    // currently we just join General instantly... nonono bad
-    joinRoom(rooms[0].name);
+function updateUsersBox(room) {
+    let usersList = document.querySelector("#users"+room.name);
+    let usersInRoom = room.clients;
+    for (child of usersList.children) {
+        child.remove();
+    }
+    
+    
+    let sortedUsers = [];
+    for (userInRoom of usersInRoom) {
+        sortedUsers.push(userInRoom.nickname);
+    }
+    
+    sortedUsers.sort();
+    
+    console.log(sortedUsers);
+    for (i = 0; i < sortedUsers.length; i++) {
+        let usernameInRoom = sortedUsers[i];
+        if (!userExists(room, usernameInRoom)) {
+            appendUserBox(usersList, usernameInRoom, room.name);
+        }
+    }
+    adjustUsersBox();
 }
 
 // // This function is called when the connection to the server is established (we give it as argument to connect above).
@@ -336,7 +495,7 @@ function doJoinGeneral() {
 //     // We can now list the rooms available on the server
 //     console.log("The server has the following rooms:");
 //     wt.availableRooms.forEach(r => {
-//         console.log(`- ${r.name}: ${r.description}`);
+    //         console.log(`- ${r.name}: ${r.description}`);
 //     });
 
 //     // Let's join a room. We'll take the first one in the list. That's 'General'.
@@ -348,23 +507,23 @@ function doJoinGeneral() {
 //     // We can subscribe to messages.
 //     // Note that the callback function has two parameters: the room and the message.
 //     room.onMessage((room, msg) => {
-//         console.log(`${room.name} - ${msg.sender}: ${msg.message}`);
+    //         console.log(`${room.name} - ${msg.sender}: ${msg.message}`);
 //     });
 
 //     // We can also subscribe to notifications of clients joining the room
 //     room.onJoin((room, nickname) => {
-//        console.log(`${nickname} joined ${room.name}`);
+    //        console.log(`${nickname} joined ${room.name}`);
 //     });
 
 //     // ... and leaving the room
 //     room.onLeave((room, nickname) => {
-//         console.log(`${nickname} left ${room.name}`);
+    //         console.log(`${nickname} left ${room.name}`);
 //     });
 
 //     // Also to get a notification if the connection to the server is lost
 //     // The client will automatically try to reconnect
 //     room.onDisconnect((room) => {
-//        console.log(`Connection to server lost`);
+    //        console.log(`Connection to server lost`);
 //     });
 
 //     // These two lines puts the functions on the global window object so
